@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
@@ -10,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.hanaparal"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -39,6 +40,12 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
+
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
@@ -89,4 +96,6 @@ dependencies {
 
     // Optional helpers
     implementation("androidx.core:core-ktx:1.13.1")
+
+    implementation("androidx.appcompat:appcompat:1.7.0")
 }
