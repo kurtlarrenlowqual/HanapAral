@@ -2,8 +2,8 @@ package com.example.hanaparal.data
 
 import android.content.Context
 import com.example.hanaparal.core.Constants
+import com.example.hanaparal.data.models.StudyGroup          // ← NEW IMPORT
 import com.example.hanaparal.data.models.UserProfile
-import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
@@ -92,6 +92,41 @@ class FirebaseRepositories(
         return runCatching {
             val profile = getCurrentUserProfile().getOrThrow()
             profile?.role == Constants.ROLE_SUPERUSER
+        }
+    }
+
+    // ================================================================
+    // NEW FUNCTION FOR REQUIREMENT #3 – Study Group Creation
+    // ================================================================
+    /**
+     * Creates a new study group.
+     * - Only authenticated users can call this.
+     * - Creator automatically becomes the group administrator (adminUid).
+     * - Creator is added as the first member.
+     * - Group is saved in Constants.GROUPS_COLLECTION.
+     */
+    suspend fun createStudyGroup(
+        name: String,
+        description: String
+    ): Result<String> {
+        return runCatching {
+            val uid = auth.currentUser?.uid ?: error("No authenticated user.")
+
+            // Create a reference with auto-generated document ID
+            val groupRef = firestore.collection(Constants.GROUPS_COLLECTION).document()
+
+            val group = StudyGroup(
+                id = groupRef.id,
+                name = name,
+                description = description,
+                adminUid = uid,
+                members = listOf(uid),                    // Creator is first member
+                createdAt = System.currentTimeMillis()
+            )
+
+            groupRef.set(group).await()
+
+            group.id  // Return the generated group ID on success
         }
     }
 }
