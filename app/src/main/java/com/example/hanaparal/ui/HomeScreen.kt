@@ -17,10 +17,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.hanaparal.remoteconfig.RemoteConfigUiState
+import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
+    navController: NavController,
     uiState: RemoteConfigUiState,
     onSubscribeTopic: suspend () -> Unit,
     onFetchRemoteConfig: suspend () -> Unit,
@@ -70,6 +72,12 @@ fun HomeScreen(
 
         Button(onClick = { kotlinx.coroutines.GlobalScope.launch { onSubscribeTopic() } }) {
             Text("Subscribe to Global Announcements Topic")
+        }
+
+        Button(onClick = {
+            navController.navigate(Routes.PROFILE)
+        }) {
+            Text("Go to Profile")
         }
     }
 }

@@ -69,6 +69,7 @@ class MainActivity : AppCompatActivity() {
                         navController = navController,
                         homeScreen = {
                             HomeScreen(
+                                navController = navController,
                                 uiState = remoteState,
                                 onSubscribeTopic = {
                                     repos.subscribeToGlobalAnnouncements()
