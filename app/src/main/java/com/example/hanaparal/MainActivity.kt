@@ -15,6 +15,7 @@ import com.example.hanaparal.ui.Routes
 import com.example.hanaparal.ui.SuperuserScreen
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
+
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +47,6 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             val navController = rememberNavController()
-            val scope = rememberCoroutineScope()
             var remoteState by remember { mutableStateOf(remoteConfigRepo.readState()) }
 
             val biometricHelper = remember {
@@ -92,7 +92,8 @@ class MainActivity : AppCompatActivity() {
                         },
                         superuserScreen = {
                             SuperuserScreen(uiState = remoteState)
-                        }
+                        },
+                        firebaseRepositories = repos
                     )
                 }
             }
