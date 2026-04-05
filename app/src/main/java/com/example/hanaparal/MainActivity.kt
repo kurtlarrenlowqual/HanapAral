@@ -100,7 +100,9 @@ class MainActivity : AppCompatActivity() {
                             )
                         },
                         superuserScreen = {
-                            SuperuserScreen(uiState = remoteState)
+                            SuperuserScreen(
+                                uiState = remoteState
+                            )
                         },
                         firebaseRepositories = repos
                     )
