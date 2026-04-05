@@ -1,6 +1,7 @@
 package com.example.hanaparal
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
@@ -13,30 +14,26 @@ import com.example.hanaparal.ui.AppNav
 import com.example.hanaparal.ui.HomeScreen
 import com.example.hanaparal.ui.Routes
 import com.example.hanaparal.ui.SuperuserScreen
-import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
+import com.example.hanaparal.auth.AuthRepository
 
 class MainActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Fetching remote config data for testing
+        // Test features
         RemoteConfigTest.init()
         RemoteConfigTest.fetchValues()
-
-        // Write user to the firestore for testing
         FirestoreTest.writeSampleUser()
 
-        // Fetching FCM token for testing -- for cloud messaging
         FirebaseMessaging.getInstance().token
             .addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
                     Log.e("FCM_TEST", "Fetching FCM token failed", task.exception)
                     return@addOnCompleteListener
                 }
-
-                val token = task.result
-                Log.d("FCM_TEST", "FCM Token: $token")
+                Log.d("FCM_TEST", "FCM Token: ${task.result}")
             }
 
         val app = application as HanapAralApp
@@ -51,8 +48,8 @@ class MainActivity : AppCompatActivity() {
 
             val biometricHelper = remember {
                 BiometricHelper(
-                    activity = this,
-                    executor = ContextCompat.getMainExecutor(this)
+                    activity = this@MainActivity,
+                    executor = ContextCompat.getMainExecutor(this@MainActivity)
                 )
             }
 
@@ -67,6 +64,7 @@ class MainActivity : AppCompatActivity() {
                 Surface {
                     AppNav(
                         navController = navController,
+                        authRepo = authRepo,
                         homeScreen = {
                             HomeScreen(
                                 navController = navController,
@@ -84,7 +82,7 @@ class MainActivity : AppCompatActivity() {
                                             onSuccess = {
                                                 navController.navigate(Routes.SUPERUSER)
                                             },
-                                            onError = { /* show snackbar/toast if you want */ }
+                                            onError = { }
                                         )
                                     }
                                 }

@@ -15,14 +15,39 @@ object Routes {
     const val PROFILE = "profile"
 }
 
+
 @Composable
 fun AppNav(
     navController: NavHostController,
+    authRepo: AuthRepository,
     homeScreen: @Composable () -> Unit,
     superuserScreen: @Composable () -> Unit,
     firebaseRepositories: FirebaseRepositories
+    superuserScreen: @Composable () -> Unit
+
 ) {
-    NavHost(navController = navController, startDestination = Routes.HOME) {
+
+    val user = authRepo.getCurrentUser()
+    val startDestination = if (user != null) Routes.HOME else Routes.LOGIN
+
+    NavHost(navController, startDestination = startDestination) {
+
+        composable(Routes.LOGIN) {
+            LoginScreen(
+                authRepository = authRepo,
+                onLoginSuccess = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                },
+                onGoToProfile = {
+                    navController.navigate(Routes.PROFILE) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(Routes.HOME) { homeScreen() }
         composable(Routes.SUPERUSER) { superuserScreen() }
         composable(Routes.PROFILE) {
