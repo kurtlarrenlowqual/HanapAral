@@ -85,6 +85,18 @@ fun HomeScreen(
             Text("Go to Profile")
         }
 
+        Button(onClick = {
+            navController.navigate(Routes.CREATE_GROUP)
+        }) {
+            Text("Create Study Group")
+        }
+
+        Button(onClick = {
+            navController.navigate(Routes.GROUP_LIST)
+        }) {
+            Text("View Study Groups")
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
