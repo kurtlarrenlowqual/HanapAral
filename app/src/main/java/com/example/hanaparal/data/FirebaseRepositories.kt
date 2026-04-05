@@ -152,6 +152,9 @@ class FirebaseRepositories(
 
                 val updated = members + user.uid
                 transaction.update(docRef, "members", updated)
+
+                FirebaseMessaging.getInstance()
+                    .subscribeToTopic("group_$groupId")
             }.await()
         }
     }
@@ -229,5 +232,9 @@ class FirebaseRepositories(
 
             users
         }
+    }
+
+    fun subscribeToGroupTopic(groupId: String) {
+        FirebaseMessaging.getInstance().subscribeToTopic("group_$groupId")
     }
 }

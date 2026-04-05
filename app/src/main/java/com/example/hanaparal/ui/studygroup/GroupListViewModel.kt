@@ -25,6 +25,7 @@ class GroupListViewModel(
 
     var groupMembers by mutableStateOf<List<UserProfile>>(emptyList())
 
+
     fun loadGroups() {
         viewModelScope.launch {
             repo.getStudyGroups()
