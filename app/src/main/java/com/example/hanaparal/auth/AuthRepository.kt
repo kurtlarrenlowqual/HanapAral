@@ -42,6 +42,29 @@ class AuthRepository(
         }
     }
 
+    suspend fun signInWithEmail(email: String, pass: String): Result<Boolean> {
+        return runCatching {
+            val result = auth.signInWithEmailAndPassword(email, pass).await()
+            val user = result.user ?: error("User is null")
+            val hasProfile = hasUserProfile(user.uid)
+            
+            firebaseRepo.saveCurrentUserTokenToFirestore()
+            firebaseRepo.subscribeToGlobalAnnouncements()
+            
+            hasProfile
+        }
+    }
+
+    suspend fun signUpWithEmail(email: String, pass: String): Result<Boolean> {
+        return runCatching {
+            val result = auth.createUserWithEmailAndPassword(email, pass).await()
+            val user = result.user ?: error("User is null")
+            
+            // New users won't have a profile yet
+            false
+        }
+    }
+
     // ✅ OUTSIDE function (correct placement)
     suspend fun hasUserProfile(uid: String): Boolean {
         val doc = firebaseRepo.getUserProfile(uid)
