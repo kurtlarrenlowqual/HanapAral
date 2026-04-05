@@ -7,6 +7,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.tasks.await
 
+
 class AuthRepository(
     private val context: Context,
     private val firebaseRepo: FirebaseRepositories
@@ -32,7 +33,8 @@ class AuthRepository(
             val user = result.user ?: error("User is null")
 
             // 🔥 CHECK if profile exists FIRST
-            val hasProfile = hasUserProfile(user.uid)
+            val hasProfile = firebaseRepo.getCurrentUserProfile()
+                .getOrNull() != null
 
             // Optional Firebase features
             firebaseRepo.saveCurrentUserTokenToFirestore()
@@ -42,11 +44,6 @@ class AuthRepository(
         }
     }
 
-    // ✅ OUTSIDE function (correct placement)
-    suspend fun hasUserProfile(uid: String): Boolean {
-        val doc = firebaseRepo.getUserProfile(uid)
-        return doc.getOrNull() != null
-    }
 
     fun getCurrentUser() = auth.currentUser
 

@@ -19,6 +19,10 @@ import androidx.compose.ui.unit.dp
 import com.example.hanaparal.remoteconfig.RemoteConfigUiState
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.ButtonDefaults
 
 @Composable
 fun HomeScreen(
@@ -26,7 +30,8 @@ fun HomeScreen(
     uiState: RemoteConfigUiState,
     onSubscribeTopic: suspend () -> Unit,
     onFetchRemoteConfig: suspend () -> Unit,
-    onOpenSuperuser: () -> Unit
+    onOpenSuperuser: () -> Unit,
+    onLogout: () -> Unit
 ) {
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -78,6 +83,16 @@ fun HomeScreen(
             navController.navigate(Routes.PROFILE)
         }) {
             Text("Go to Profile")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = { onLogout() },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+        ) {
+            Text("Logout")
         }
     }
 }

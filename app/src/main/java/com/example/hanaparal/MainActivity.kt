@@ -46,6 +46,9 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val navController = rememberNavController()
             var remoteState by remember { mutableStateOf(remoteConfigRepo.readState()) }
+            val authRepo = remember {
+                AuthRepository(this, repos)
+            }
 
             val biometricHelper = remember {
                 BiometricHelper(
@@ -70,6 +73,13 @@ class MainActivity : AppCompatActivity() {
                             HomeScreen(
                                 navController = navController,
                                 uiState = remoteState,
+                                onLogout = {
+                                    authRepo.signOut()
+
+                                    navController.navigate(Routes.LOGIN) {
+                                        popUpTo(0) // 🔥 clears entire back stack
+                                    }
+                                },
                                 onSubscribeTopic = {
                                     repos.subscribeToGlobalAnnouncements()
                                 },
