@@ -85,10 +85,18 @@ fun HomeScreen(
             Text("Go to Profile")
         }
 
-        Button(onClick = {
-            navController.navigate(Routes.CREATE_GROUP)
-        }) {
-            Text("Create Study Group")
+        Button(
+            onClick = {
+                navController.navigate(Routes.CREATE_GROUP)
+            },
+            enabled = uiState.enableGroupCreation
+        ) {
+            Text(
+                if (uiState.enableGroupCreation)
+                    "Create Study Group"
+                else
+                    "Group Creation Disabled"
+            )
         }
 
         Button(onClick = {
