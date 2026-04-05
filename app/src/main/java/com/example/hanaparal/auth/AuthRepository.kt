@@ -17,7 +17,7 @@ class AuthRepository(
 
     fun getGoogleSignInClient(): GoogleSignInClient {
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("YOUR_WEB_CLIENT_ID") // 🔥 IMPORTANT
+            .requestIdToken("283422875187-1t3lkq2qe6v1cl5dprr3thku6t4clonr.apps.googleusercontent.com")
             .requestEmail()
             .build()
 
