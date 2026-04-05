@@ -211,4 +211,23 @@ class FirebaseRepositories(
                 ?: error("Group not found")
         }
     }
+
+    suspend fun getUsersByIds(userIds: List<String>): Result<List<UserProfile>> {
+        return runCatching {
+            val users = mutableListOf<UserProfile>()
+
+            userIds.forEach { uid ->
+                val doc = firestore.collection("users")
+                    .document(uid)
+                    .get()
+                    .await()
+
+                doc.toObject(UserProfile::class.java)?.let {
+                    users.add(it)
+                }
+            }
+
+            users
+        }
+    }
 }

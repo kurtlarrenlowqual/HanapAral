@@ -128,7 +128,7 @@ fun AppNav(
             if (group == null) {
                 Text("Loading...")
             } else {
-                GroupMembersScreen(group)
+                GroupMembersScreen(group, viewModel)
             }
         }
 

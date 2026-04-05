@@ -7,17 +7,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
-import android.R.attr.name
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
-fun GroupMembersScreen(group: StudyGroup) {
+fun GroupMembersScreen(
+    group: StudyGroup,
+    viewModel: GroupListViewModel
+) {
+
+    val members = viewModel.groupMembers
+
+    LaunchedEffect(group.id) {
+        viewModel.loadMembers(group)
+    }
 
     Column(modifier = Modifier.padding(16.dp)) {
 
         Text("Members of ${group.name}")
 
-        group.members.forEach { uid ->
-            Text("$uid")
+        if (members.isEmpty()) {
+            Text("Loading members...")
+        } else {
+            members.forEach { user ->
+                Text("${user.name} (${user.email})")
+            }
         }
     }
 }
