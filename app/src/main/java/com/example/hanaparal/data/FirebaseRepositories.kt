@@ -155,4 +155,60 @@ class FirebaseRepositories(
             }.await()
         }
     }
+
+    suspend fun updateStudyGroup(
+        groupId: String,
+        name: String,
+        subject: String,
+        maxMembers: Int
+    ): Result<Unit> {
+        return runCatching {
+            val docRef = firestore.collection("study_groups").document(groupId)
+
+            firestore.runTransaction { tx ->
+                val snapshot = tx.get(docRef)
+
+                val adminId = snapshot.getString("adminId")
+                val currentUser = auth.currentUser?.uid ?: error("No user")
+
+                if (adminId != currentUser) {
+                    throw Exception("Only admin can edit")
+                }
+
+                tx.update(docRef, mapOf(
+                    "name" to name,
+                    "subject" to subject,
+                    "maxMembers" to maxMembers
+                ))
+            }.await()
+        }
+    }
+
+    suspend fun deleteStudyGroup(groupId: String): Result<Unit> {
+        return runCatching {
+            val docRef = firestore.collection("study_groups").document(groupId)
+
+            val snapshot = docRef.get().await()
+            val adminId = snapshot.getString("adminId")
+
+            val currentUser = auth.currentUser?.uid ?: error("No user")
+
+            if (adminId != currentUser) {
+                throw Exception("Only admin can delete")
+            }
+
+            docRef.delete().await()
+        }
+    }
+
+    suspend fun getGroupById(groupId: String): Result<StudyGroup> {
+        return runCatching {
+            firestore.collection("study_groups")
+                .document(groupId)
+                .get()
+                .await()
+                .toObject(StudyGroup::class.java)
+                ?: error("Group not found")
+        }
+    }
 }

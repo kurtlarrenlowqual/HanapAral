@@ -15,6 +15,10 @@ import com.example.hanaparal.ui.studygroup.CreateGroupScreen
 import com.example.hanaparal.ui.studygroup.GroupListScreen
 import com.example.hanaparal.ui.studygroup.GroupListViewModelFactory
 import com.example.hanaparal.ui.studygroup.CreateGroupViewModelFactory
+import com.example.hanaparal.ui.studygroup.GroupMembersScreen
+import com.example.hanaparal.ui.studygroup.EditGroupScreen
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.Text
 
 
 object Routes {
@@ -24,6 +28,8 @@ object Routes {
     const val LOGIN = "login"
     const val CREATE_GROUP = "create_group"
     const val GROUP_LIST = "group_list"
+    const val GROUP_MEMBERS = "group_members"
+    const val EDIT_GROUP = "edit_group"
 }
 
 
@@ -94,7 +100,86 @@ fun AppNav(
                 factory = GroupListViewModelFactory(firebaseRepositories)
             )
 
-            GroupListScreen(viewModel)
+            GroupListScreen(
+                viewModel = viewModel,
+                onEdit = { groupId ->
+                    navController.navigate("edit_group/$groupId")
+                },
+                onViewMembers = { groupId ->
+                    navController.navigate("group_members/$groupId")
+                }
+            )
         }
+
+        composable("group_members/{groupId}") { backStackEntry ->
+
+            val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
+
+            val viewModel: GroupListViewModel = viewModel(
+                factory = GroupListViewModelFactory(firebaseRepositories)
+            )
+
+            val group = viewModel.selectedGroup
+
+            LaunchedEffect(groupId) {
+                viewModel.loadGroupById(groupId)
+            }
+
+            if (group == null) {
+                Text("Loading...")
+            } else {
+                GroupMembersScreen(group)
+            }
+        }
+
+        composable("edit_group/{groupId}") { backStackEntry ->
+
+            val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
+
+            val viewModel: GroupListViewModel = viewModel(
+                factory = GroupListViewModelFactory(firebaseRepositories)
+            )
+
+            val group = viewModel.groups.find { it.id == groupId }
+
+            if (group != null) {
+                EditGroupScreen(
+                    group = group,
+                    onSave = { name, subject, max ->
+                        viewModel.updateGroup(groupId, name, subject, max)
+                        navController.popBackStack()
+                    }
+                )
+            }
+        }
+
+        composable("edit_group/{groupId}") { backStackEntry ->
+
+            val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
+
+            val viewModel: GroupListViewModel = viewModel(
+                factory = GroupListViewModelFactory(firebaseRepositories)
+            )
+
+            val group = viewModel.selectedGroup
+
+            LaunchedEffect(groupId) {
+                viewModel.loadGroupById(groupId)
+            }
+
+            if (group == null) {
+                Text("Loading...")
+            } else {
+                EditGroupScreen(
+                    group = group,
+                    onSave = { name, subject, max ->
+                        viewModel.updateGroup(groupId, name, subject, max)
+                        navController.popBackStack()
+                    }
+                )
+            }
+        }
+
+
     }
 }

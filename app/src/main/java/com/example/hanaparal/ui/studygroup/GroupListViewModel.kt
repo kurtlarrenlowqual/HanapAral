@@ -20,6 +20,8 @@ class GroupListViewModel(
     var groups by mutableStateOf<List<StudyGroup>>(emptyList())
     var message by mutableStateOf("")
 
+    var selectedGroup by mutableStateOf<StudyGroup?>(null)
+
     fun loadGroups() {
         viewModelScope.launch {
             repo.getStudyGroups()
@@ -35,6 +37,46 @@ class GroupListViewModel(
                     loadGroups()
                 }
                 .onFailure { message = it.message ?: "Error" }
+        }
+    }
+
+    fun deleteGroup(groupId: String) {
+        viewModelScope.launch {
+            repo.deleteStudyGroup(groupId)
+                .onSuccess {
+                    message = "Group deleted"
+                    loadGroups()
+                }
+                .onFailure {
+                    message = it.message ?: "Error deleting"
+                }
+        }
+    }
+
+    fun updateGroup(
+        groupId: String,
+        name: String,
+        subject: String,
+        maxMembers: Int
+    ) {
+        viewModelScope.launch {
+            repo.updateStudyGroup(groupId, name, subject, maxMembers)
+                .onSuccess {
+                    message = "Group updated"
+                    loadGroups()
+                }
+                .onFailure {
+                    message = it.message ?: "Error updating"
+                }
+        }
+    }
+
+    fun loadGroupById(groupId: String) {
+        viewModelScope.launch {
+            repo.getGroupById(groupId)
+                .onSuccess {
+                    selectedGroup = it
+                }
         }
     }
 }
