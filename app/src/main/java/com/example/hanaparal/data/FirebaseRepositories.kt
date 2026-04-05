@@ -51,15 +51,21 @@ class FirebaseRepositories(
         }
     }
 
-    suspend fun getCurrentUserProfile(): Result<UserProfile?> {
+    suspend fun getUserProfile(uid: String): Result<UserProfile?> {
         return runCatching {
-            val uid = auth.currentUser?.uid ?: error("No authenticated user.")
             val snapshot = firestore.collection(Constants.USERS_COLLECTION)
                 .document(uid)
                 .get()
                 .await()
 
             snapshot.toObject(UserProfile::class.java)
+        }
+    }
+
+    suspend fun getCurrentUserProfile(): Result<UserProfile?> {
+        return runCatching {
+            val uid = auth.currentUser?.uid ?: error("No authenticated user.")
+            getUserProfile(uid).getOrThrow()
         }
     }
 
