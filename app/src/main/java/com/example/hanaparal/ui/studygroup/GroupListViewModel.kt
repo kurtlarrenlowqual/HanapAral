@@ -18,6 +18,7 @@ class GroupListViewModel(
 ) : ViewModel() {
 
     var groups by mutableStateOf<List<StudyGroup>>(emptyList())
+    var message by mutableStateOf("")
 
     fun loadGroups() {
         viewModelScope.launch {
@@ -29,6 +30,11 @@ class GroupListViewModel(
     fun joinGroup(groupId: String) {
         viewModelScope.launch {
             repo.joinGroup(groupId)
+                .onSuccess {
+                    message = "Joined successfully"
+                    loadGroups()
+                }
+                .onFailure { message = it.message ?: "Error" }
         }
     }
 }

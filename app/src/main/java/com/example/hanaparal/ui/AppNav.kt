@@ -9,7 +9,12 @@ import com.example.hanaparal.data.FirebaseRepositories
 import com.example.hanaparal.ui.profile.ProfileScreen
 import com.example.hanaparal.ui.profile.ProfileViewModel
 import com.example.hanaparal.auth.AuthRepository
-
+import com.example.hanaparal.ui.studygroup.GroupListViewModel
+import com.example.hanaparal.ui.studygroup.CreateGroupViewModel
+import com.example.hanaparal.ui.studygroup.CreateGroupScreen
+import com.example.hanaparal.ui.studygroup.GroupListScreen
+import com.example.hanaparal.ui.studygroup.GroupListViewModelFactory
+import com.example.hanaparal.ui.studygroup.CreateGroupViewModelFactory
 
 
 object Routes {
@@ -17,6 +22,8 @@ object Routes {
     const val SUPERUSER = "superuser"
     const val PROFILE = "profile"
     const val LOGIN = "login"
+    const val CREATE_GROUP = "create_group"
+    const val GROUP_LIST = "group_list"
 }
 
 
@@ -67,6 +74,27 @@ fun AppNav(
                     }
                 }
             )
+        }
+
+        composable(Routes.CREATE_GROUP) {
+            val viewModel: CreateGroupViewModel = viewModel(
+                factory = CreateGroupViewModelFactory(firebaseRepositories)
+            )
+
+            CreateGroupScreen(
+                viewModel = viewModel,
+                onGroupCreated = {
+                    navController.navigate(Routes.GROUP_LIST)
+                }
+            )
+        }
+
+        composable(Routes.GROUP_LIST) {
+            val viewModel: GroupListViewModel = viewModel(
+                factory = GroupListViewModelFactory(firebaseRepositories)
+            )
+
+            GroupListScreen(viewModel)
         }
     }
 }
