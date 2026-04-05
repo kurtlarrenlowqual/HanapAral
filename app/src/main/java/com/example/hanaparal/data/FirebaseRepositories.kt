@@ -8,6 +8,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.tasks.await
+import  com.example.hanaparal.data.models.StudyGroup
+
 
 class FirebaseRepositories(
     private val appContext: Context,
@@ -92,6 +94,29 @@ class FirebaseRepositories(
         return runCatching {
             val profile = getCurrentUserProfile().getOrThrow()
             profile?.role == Constants.ROLE_SUPERUSER
+        }
+    }
+
+    suspend fun createStudyGroup(
+        name: String,
+        subject: String,
+        maxMembers: Int
+    ): Result<Unit> {
+        return runCatching {
+            val user = FirebaseAuth.getInstance().currentUser ?: error("No user")
+
+            val groupRef = firestore.collection("study_groups").document()
+
+            val group = StudyGroup(
+                id = groupRef.id,
+                name = name,
+                subject = subject,
+                adminId = user.uid,
+                members = listOf(user.uid),
+                maxMembers = maxMembers
+            )
+
+            groupRef.set(group).await()
         }
     }
 }
