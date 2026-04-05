@@ -8,29 +8,31 @@ import androidx.navigation.compose.composable
 import com.example.hanaparal.data.FirebaseRepositories
 import com.example.hanaparal.ui.profile.ProfileScreen
 import com.example.hanaparal.ui.profile.ProfileViewModel
+import com.example.hanaparal.auth.AuthRepository
+
+
 
 object Routes {
     const val HOME = "home"
     const val SUPERUSER = "superuser"
     const val PROFILE = "profile"
+    const val LOGIN = "login"
 }
 
 
 @Composable
 fun AppNav(
     navController: NavHostController,
-    authRepo: AuthRepository,
+    authRepo: AuthRepository, // ✅ ADD THIS
     homeScreen: @Composable () -> Unit,
     superuserScreen: @Composable () -> Unit,
     firebaseRepositories: FirebaseRepositories
-    superuserScreen: @Composable () -> Unit
-
 ) {
 
     val user = authRepo.getCurrentUser()
     val startDestination = if (user != null) Routes.HOME else Routes.LOGIN
 
-    NavHost(navController, startDestination = startDestination) {
+    NavHost(navController = navController, startDestination = startDestination) {
 
         composable(Routes.LOGIN) {
             LoginScreen(
@@ -49,12 +51,22 @@ fun AppNav(
         }
 
         composable(Routes.HOME) { homeScreen() }
+
         composable(Routes.SUPERUSER) { superuserScreen() }
+
         composable(Routes.PROFILE) {
             val profileViewModel: ProfileViewModel = viewModel(
                 factory = ProfileViewModel.Factory(firebaseRepositories)
             )
-            ProfileScreen(viewModel = profileViewModel)
+
+            ProfileScreen(
+                viewModel = profileViewModel,
+                onProfileSaved = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.PROFILE) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

@@ -7,13 +7,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.hanaparal.data.models.UserProfile
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun ProfileScreen(viewModel: ProfileViewModel) {
+fun ProfileScreen(viewModel: ProfileViewModel, onProfileSaved: () -> Unit) {
 
     val profile by viewModel.profileState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val user = FirebaseAuth.getInstance().currentUser ?: return
 
     var name by remember { mutableStateOf("") }
     var course by remember { mutableStateOf("") }
@@ -79,11 +81,13 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
             Button(
                 onClick = {
                     val updatedProfile = UserProfile(
+                        uid = user.uid,
                         name = name,
                         courseProgram = course,
                         email = email
                     )
                     viewModel.saveProfile(updatedProfile)
+                    onProfileSaved()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading

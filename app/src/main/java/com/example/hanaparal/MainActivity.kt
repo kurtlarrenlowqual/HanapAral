@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity() {
         val app = application as HanapAralApp
         val repos = app.container.firebaseRepositories
         val remoteConfigRepo = app.container.remoteConfigRepository
+        val authRepo = AuthRepository(this, repos)
 
         remoteConfigRepo.initDefaults()
 
