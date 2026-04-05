@@ -1,6 +1,7 @@
 package com.example.hanaparal.core
 
 import android.content.Context
+import com.example.hanaparal.auth.AuthRepository
 import com.example.hanaparal.data.FirebaseRepositories
 import com.example.hanaparal.remoteconfig.RemoteConfigRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -14,6 +15,11 @@ class AppContainer(context: Context) {
         appContext = context,
         auth = auth,
         firestore = firestore
+    )
+
+    val authRepository = AuthRepository(
+        context = context,
+        firebaseRepo = firebaseRepositories
     )
 
     val remoteConfigRepository = RemoteConfigRepository()
