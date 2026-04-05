@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "283422875187-q0nhcqnd0d6ucsbb69p0rtko04701616.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hanaparal",
+            "certificate_hash": "7596ee9ee3523960a09404db2db5911f1171ab5c"
+          }
+        },
+        {
           "client_id": "283422875187-1t3lkq2qe6v1cl5dprr3thku6t4clonr.apps.googleusercontent.com",
           "client_type": 3
         }

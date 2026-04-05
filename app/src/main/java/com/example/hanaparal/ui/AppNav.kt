@@ -14,14 +14,20 @@ object Routes {
     const val LOGIN = "login"
 }
 
+
 @Composable
 fun AppNav(
     navController: NavHostController,
     authRepo: AuthRepository,
     homeScreen: @Composable () -> Unit,
     superuserScreen: @Composable () -> Unit
+
 ) {
-    NavHost(navController, startDestination = Routes.LOGIN) {
+
+    val user = authRepo.getCurrentUser()
+    val startDestination = if (user != null) Routes.HOME else Routes.LOGIN
+
+    NavHost(navController, startDestination = startDestination) {
 
         composable(Routes.LOGIN) {
             LoginScreen(

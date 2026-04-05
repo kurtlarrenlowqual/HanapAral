@@ -1,5 +1,6 @@
 package com.example.hanaparal.ui
 
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.*
@@ -22,18 +23,33 @@ fun LoginScreen(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
+
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+
         try {
             val account = task.result
-            val idToken = account.idToken!!
+            val idToken = account.idToken
+
+            if (idToken == null) {
+                Log.e("LOGIN", "❌ ID TOKEN IS NULL")
+                return@rememberLauncherForActivityResult
+            }
+
+            Log.d("LOGIN", "✅ ID TOKEN RECEIVED")
 
             scope.launch {
                 authRepository.firebaseAuthWithGoogle(idToken)
-                    .onSuccess { onLoginSuccess() }
+                    .onSuccess {
+                        Log.d("LOGIN", "✅ FIREBASE AUTH SUCCESS")
+                        onLoginSuccess()
+                    }
+                    .onFailure {
+                        Log.e("LOGIN", "❌ FIREBASE AUTH FAILED", it)
+                    }
             }
 
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("LOGIN", "❌ GOOGLE SIGN-IN FAILED", e)
         }
     }
 
