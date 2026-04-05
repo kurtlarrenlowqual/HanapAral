@@ -2,43 +2,37 @@ package com.example.hanaparal.ui
 
 import android.Manifest
 import android.os.Build
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.hanaparal.remoteconfig.RemoteConfigUiState
+import androidx.navigation.NavController
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.ButtonDefaults
 
 @Composable
 fun HomeScreen(
+    navController: NavController,
     uiState: RemoteConfigUiState,
     onSubscribeTopic: suspend () -> Unit,
     onFetchRemoteConfig: suspend () -> Unit,
     onOpenSuperuser: () -> Unit,
-    onCreateStudyGroup: suspend (String, String) -> Unit
+    onLogout: () -> Unit
 ) {
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = {}
@@ -49,12 +43,6 @@ fun HomeScreen(
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
-
-    // Dialog states
-    var showCreateDialog by remember { mutableStateOf(false) }
-    var groupName by remember { mutableStateOf("") }
-    var groupDescription by remember { mutableStateOf("") }
-    var isCreating by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -83,90 +71,40 @@ fun HomeScreen(
             Text("Open Superuser Panel")
         }
 
-        Button(onClick = { coroutineScope.launch { onFetchRemoteConfig() } }) {
+        Button(onClick = { kotlinx.coroutines.GlobalScope.launch { onFetchRemoteConfig() } }) {
             Text("Fetch Remote Config")
         }
 
-        Button(onClick = { coroutineScope.launch { onSubscribeTopic() } }) {
+        Button(onClick = { kotlinx.coroutines.GlobalScope.launch { onSubscribeTopic() } }) {
             Text("Subscribe to Global Announcements Topic")
         }
 
-        // ==================== REQUIREMENT #3 – IMPROVED ====================
-        if (uiState.enableGroupCreation) {
-            Button(onClick = { showCreateDialog = true }) {
-                Text("Create Study Group")
-            }
+        Button(onClick = {
+            navController.navigate(Routes.PROFILE)
+        }) {
+            Text("Go to Profile")
         }
 
-        if (showCreateDialog) {
-            AlertDialog(
-                onDismissRequest = { if (!isCreating) showCreateDialog = false },
-                title = { Text("Create New Study Group") },
-                text = {
-                    Column {
-                        TextField(
-                            value = groupName,
-                            onValueChange = { groupName = it },
-                            label = { Text("Group Name *") },
-                            isError = groupName.isBlank(),
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        TextField(
-                            value = groupDescription,
-                            onValueChange = { groupDescription = it },
-                            label = { Text("Description") }
-                        )
-                    }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            if (groupName.isBlank()) {
-                                Toast.makeText(
-                                    context,
-                                    "Group name cannot be empty",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@Button
-                            }
+        Button(onClick = {
+            navController.navigate(Routes.CREATE_GROUP)
+        }) {
+            Text("Create Study Group")
+        }
 
-                            isCreating = true
-                            coroutineScope.launch {
-                                try {
-                                    onCreateStudyGroup(groupName, groupDescription)
-                                    Toast.makeText(
-                                        context,
-                                        "Study group created successfully!",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                } catch (e: Exception) {
-                                    Toast.makeText(
-                                        context,
-                                        "Failed to create group: ${e.message}",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                } finally {
-                                    isCreating = false
-                                    showCreateDialog = false
-                                    groupName = ""
-                                    groupDescription = ""
-                                }
-                            }
-                        },
-                        enabled = !isCreating
-                    ) {
-                        Text(if (isCreating) "Creating..." else "Create")
-                    }
-                },
-                dismissButton = {
-                    Button(
-                        onClick = { if (!isCreating) showCreateDialog = false },
-                        enabled = !isCreating
-                    ) {
-                        Text("Cancel")
-                    }
-                }
-            )
+        Button(onClick = {
+            navController.navigate(Routes.GROUP_LIST)
+        }) {
+            Text("View Study Groups")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = { onLogout() },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+        ) {
+            Text("Logout")
         }
     }
 }

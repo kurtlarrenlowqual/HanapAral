@@ -2,12 +2,16 @@ package com.example.hanaparal.data
 
 import android.content.Context
 import com.example.hanaparal.core.Constants
-import com.example.hanaparal.data.models.StudyGroup          // ← NEW IMPORT
 import com.example.hanaparal.data.models.UserProfile
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.tasks.await
+import  com.example.hanaparal.data.models.StudyGroup
+import kotlin.text.get
+import kotlin.text.toInt
+
 
 class FirebaseRepositories(
     private val appContext: Context,
@@ -95,38 +99,135 @@ class FirebaseRepositories(
         }
     }
 
-    // ================================================================
-    // NEW FUNCTION FOR REQUIREMENT #3 – Study Group Creation
-    // ================================================================
-    /**
-     * Creates a new study group.
-     * - Only authenticated users can call this.
-     * - Creator automatically becomes the group administrator (adminUid).
-     * - Creator is added as the first member.
-     * - Group is saved in Constants.GROUPS_COLLECTION.
-     */
     suspend fun createStudyGroup(
         name: String,
-        description: String
-    ): Result<String> {
+        subject: String,
+        maxMembers: Int
+    ): Result<Unit> {
         return runCatching {
-            val uid = auth.currentUser?.uid ?: error("No authenticated user.")
+            val user = FirebaseAuth.getInstance().currentUser ?: error("No user")
 
-            // Create a reference with auto-generated document ID
-            val groupRef = firestore.collection(Constants.GROUPS_COLLECTION).document()
+            val groupRef = firestore.collection("study_groups").document()
 
             val group = StudyGroup(
                 id = groupRef.id,
                 name = name,
-                description = description,
-                adminUid = uid,
-                members = listOf(uid),                    // Creator is first member
-                createdAt = System.currentTimeMillis()
+                subject = subject,
+                adminId = user.uid,
+                members = listOf(user.uid),
+                maxMembers = maxMembers
             )
 
             groupRef.set(group).await()
+        }
+    }
 
-            group.id  // Return the generated group ID on success
+
+    suspend fun getStudyGroups(): Result<List<StudyGroup>> {
+        return runCatching {
+            firestore.collection("study_groups")
+                .get()
+                .await()
+                .toObjects(StudyGroup::class.java)
+        }
+    }
+
+
+    suspend fun joinGroup(groupId: String): Result<Unit> {
+        return runCatching {
+            val user = FirebaseAuth.getInstance().currentUser ?: error("No user")
+
+            val docRef = firestore.collection("study_groups").document(groupId)
+
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(docRef)
+
+                val members = snapshot.get("members") as List<String>
+
+                if (members.contains(user.uid)) return@runTransaction
+
+                if (members.size >= snapshot.getLong("maxMembers")!!.toInt()) {
+                    throw Exception("Group is full")
+                }
+
+                val updated = members + user.uid
+                transaction.update(docRef, "members", updated)
+            }.await()
+        }
+    }
+
+    suspend fun updateStudyGroup(
+        groupId: String,
+        name: String,
+        subject: String,
+        maxMembers: Int
+    ): Result<Unit> {
+        return runCatching {
+            val docRef = firestore.collection("study_groups").document(groupId)
+
+            firestore.runTransaction { tx ->
+                val snapshot = tx.get(docRef)
+
+                val adminId = snapshot.getString("adminId")
+                val currentUser = auth.currentUser?.uid ?: error("No user")
+
+                if (adminId != currentUser) {
+                    throw Exception("Only admin can edit")
+                }
+
+                tx.update(docRef, mapOf(
+                    "name" to name,
+                    "subject" to subject,
+                    "maxMembers" to maxMembers
+                ))
+            }.await()
+        }
+    }
+
+    suspend fun deleteStudyGroup(groupId: String): Result<Unit> {
+        return runCatching {
+            val docRef = firestore.collection("study_groups").document(groupId)
+
+            val snapshot = docRef.get().await()
+            val adminId = snapshot.getString("adminId")
+
+            val currentUser = auth.currentUser?.uid ?: error("No user")
+
+            if (adminId != currentUser) {
+                throw Exception("Only admin can delete")
+            }
+
+            docRef.delete().await()
+        }
+    }
+
+    suspend fun getGroupById(groupId: String): Result<StudyGroup> {
+        return runCatching {
+            firestore.collection("study_groups")
+                .document(groupId)
+                .get()
+                .await()
+                .toObject(StudyGroup::class.java)
+                ?: error("Group not found")
+        }
+    }
+
+    suspend fun getUsersByIds(userIds: List<String>): Result<List<UserProfile>> {
+        return runCatching {
+            val users = mutableListOf<UserProfile>()
+
+            userIds.forEach { uid ->
+                val doc = firestore.collection("users")
+                    .document(uid)
+                    .get()
+                    .await()
+
+                doc.toObject(UserProfile::class.java)?.let {
+                    users.add(it)
+                }
+            }
+
+            users
         }
     }
 }

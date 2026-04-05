@@ -2,11 +2,11 @@ package com.example.hanaparal
 
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.*
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.example.hanaparal.security.BiometricHelper
@@ -15,40 +15,45 @@ import com.example.hanaparal.ui.HomeScreen
 import com.example.hanaparal.ui.Routes
 import com.example.hanaparal.ui.SuperuserScreen
 import com.google.firebase.messaging.FirebaseMessaging
+import com.example.hanaparal.auth.AuthRepository
 
 class MainActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Testing helpers
+        // Test features
         RemoteConfigTest.init()
         RemoteConfigTest.fetchValues()
         FirestoreTest.writeSampleUser()
 
         FirebaseMessaging.getInstance().token
-            .addOnCompleteListener { task: com.google.android.gms.tasks.Task<String> ->
+            .addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
                     Log.e("FCM_TEST", "Fetching FCM token failed", task.exception)
                     return@addOnCompleteListener
                 }
-                val token = task.result
-                Log.d("FCM_TEST", "FCM Token: $token")
+                Log.d("FCM_TEST", "FCM Token: ${task.result}")
             }
 
         val app = application as HanapAralApp
         val repos = app.container.firebaseRepositories
         val remoteConfigRepo = app.container.remoteConfigRepository
+        val authRepo = AuthRepository(this, repos)
 
         remoteConfigRepo.initDefaults()
 
         setContent {
             val navController = rememberNavController()
             var remoteState by remember { mutableStateOf(remoteConfigRepo.readState()) }
+            val authRepo = remember {
+                AuthRepository(this, repos)
+            }
 
             val biometricHelper = remember {
                 BiometricHelper(
-                    activity = this,
-                    executor = ContextCompat.getMainExecutor(this)
+                    activity = this@MainActivity,
+                    executor = ContextCompat.getMainExecutor(this@MainActivity)
                 )
             }
 
@@ -63,9 +68,18 @@ class MainActivity : AppCompatActivity() {
                 Surface {
                     AppNav(
                         navController = navController,
+                        authRepo = authRepo,
                         homeScreen = {
                             HomeScreen(
+                                navController = navController,
                                 uiState = remoteState,
+                                onLogout = {
+                                    authRepo.signOut()
+
+                                    navController.navigate(Routes.LOGIN) {
+                                        popUpTo(0) // 🔥 clears entire back stack
+                                    }
+                                },
                                 onSubscribeTopic = {
                                     repos.subscribeToGlobalAnnouncements()
                                 },
@@ -79,20 +93,16 @@ class MainActivity : AppCompatActivity() {
                                             onSuccess = {
                                                 navController.navigate(Routes.SUPERUSER)
                                             },
-                                            onError = { /* show snackbar/toast if you want */ }
+                                            onError = { }
                                         )
                                     }
-                                },
-                                // Explicitly typed to fix "Cannot infer type" errors
-                                onCreateStudyGroup = { name: String, description: String ->
-                                    repos.createStudyGroup(name, description)
-                                    Unit
                                 }
                             )
                         },
                         superuserScreen = {
                             SuperuserScreen(uiState = remoteState)
-                        }
+                        },
+                        firebaseRepositories = repos
                     )
                 }
             }
