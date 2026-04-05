@@ -9,6 +9,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.tasks.await
 import  com.example.hanaparal.data.models.StudyGroup
+import kotlin.text.get
+import kotlin.text.toInt
 
 
 class FirebaseRepositories(
@@ -117,6 +119,40 @@ class FirebaseRepositories(
             )
 
             groupRef.set(group).await()
+        }
+    }
+
+
+    suspend fun getStudyGroups(): Result<List<StudyGroup>> {
+        return runCatching {
+            firestore.collection("study_groups")
+                .get()
+                .await()
+                .toObjects(StudyGroup::class.java)
+        }
+    }
+
+
+    suspend fun joinGroup(groupId: String): Result<Unit> {
+        return runCatching {
+            val user = FirebaseAuth.getInstance().currentUser ?: error("No user")
+
+            val docRef = firestore.collection("study_groups").document(groupId)
+
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(docRef)
+
+                val members = snapshot.get("members") as List<String>
+
+                if (members.contains(user.uid)) return@runTransaction
+
+                if (members.size >= snapshot.getLong("maxMembers")!!.toInt()) {
+                    throw Exception("Group is full")
+                }
+
+                val updated = members + user.uid
+                transaction.update(docRef, "members", updated)
+            }.await()
         }
     }
 }
