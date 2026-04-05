@@ -44,15 +44,7 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             val navController = rememberNavController()
-            val scope = rememberCoroutineScope()
-
-            val authRepo = remember {
-                AuthRepository(this@MainActivity, repos)
-            }
-
-            var remoteState by remember {
-                mutableStateOf(remoteConfigRepo.readState())
-            }
+            var remoteState by remember { mutableStateOf(remoteConfigRepo.readState()) }
 
             val biometricHelper = remember {
                 BiometricHelper(
@@ -75,6 +67,7 @@ class MainActivity : AppCompatActivity() {
                         authRepo = authRepo,
                         homeScreen = {
                             HomeScreen(
+                                navController = navController,
                                 uiState = remoteState,
                                 onSubscribeTopic = {
                                     repos.subscribeToGlobalAnnouncements()
@@ -97,7 +90,8 @@ class MainActivity : AppCompatActivity() {
                         },
                         superuserScreen = {
                             SuperuserScreen(uiState = remoteState)
-                        }
+                        },
+                        firebaseRepositories = repos
                     )
                 }
             }
