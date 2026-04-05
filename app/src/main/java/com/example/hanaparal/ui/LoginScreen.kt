@@ -29,7 +29,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     authRepository: AuthRepository,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    onGoToProfile: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
@@ -37,7 +38,9 @@ fun LoginScreen(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
+
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+
         try {
             val account = task.result
             val idToken = account.idToken
@@ -52,10 +55,17 @@ fun LoginScreen(
 
             scope.launch {
                 authRepository.firebaseAuthWithGoogle(idToken)
-                    .onSuccess {
-                        Log.d("LOGIN", "✅ FIREBASE AUTH SUCCESS")
+                    .onSuccess { hasProfile ->
+
+                        if (hasProfile) {
+                            Log.d("LOGIN", "User HAS profile → HOME")
+                            onLoginSuccess()
+                        } else {
+                            Log.d("LOGIN", "User NO profile → PROFILE")
+                            onGoToProfile()
+                        }
+
                         isLoading = false
-                        onLoginSuccess()
                     }
                     .onFailure {
                         Log.e("LOGIN", "❌ FIREBASE AUTH FAILED", it)
@@ -72,9 +82,8 @@ fun LoginScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -83,9 +92,7 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
 
-                // App title
                 Text(
                     text = "Welcome to HanaParal",
                     fontSize = 28.sp,
@@ -96,7 +103,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Subtitle
                 Text(
                     text = "Test app",
                     fontSize = 16.sp,
@@ -106,7 +112,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(48.dp))
 
-                // Google Sign-in Button
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -127,24 +132,14 @@ fun LoginScreen(
                             horizontalArrangement = Arrangement.Center
                         ) {
 
-                            AnimatedVisibility(
-                                visible = !isLoading,
-                                enter = fadeIn(),
-                                exit = fadeOut()
-                            ) {
+                            if (!isLoading) {
                                 Text(
                                     text = "Sign in with Google",
                                     color = Color.White,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium
                                 )
-                            }
-
-                            AnimatedVisibility(
-                                visible = isLoading,
-                                enter = fadeIn(),
-                                exit = fadeOut()
-                            ) {
+                            } else {
                                 CircularProgressIndicator(
                                     color = Color.White,
                                     modifier = Modifier.size(24.dp),

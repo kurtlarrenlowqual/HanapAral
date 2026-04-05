@@ -12,6 +12,7 @@ object Routes {
     const val HOME = "home"
     const val SUPERUSER = "superuser"
     const val LOGIN = "login"
+    const val PROFILE = "profile"
 }
 
 
@@ -34,6 +35,11 @@ fun AppNav(
                 authRepository = authRepo,
                 onLoginSuccess = {
                     navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                },
+                onGoToProfile = {
+                    navController.navigate(Routes.PROFILE) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 }

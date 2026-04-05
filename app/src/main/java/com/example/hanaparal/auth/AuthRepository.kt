@@ -2,7 +2,6 @@ package com.example.hanaparal.auth
 
 import android.content.Context
 import com.example.hanaparal.data.FirebaseRepositories
-import com.example.hanaparal.data.models.UserProfile
 import com.google.android.gms.auth.api.signin.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -24,33 +23,35 @@ class AuthRepository(
         return GoogleSignIn.getClient(context, options)
     }
 
-    suspend fun firebaseAuthWithGoogle(idToken: String): Result<Unit> {
+    // ✅ MAIN LOGIN FUNCTION
+    suspend fun firebaseAuthWithGoogle(idToken: String): Result<Boolean> {
         return runCatching {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val result = auth.signInWithCredential(credential).await()
 
             val user = result.user ?: error("User is null")
 
-            // Save to Firestore (Member 1 function)
-            firebaseRepo.createOrUpdateUserProfile(
-                UserProfile(
-                    uid = user.uid,
-                    name = user.displayName ?: "",
-                    courseProgram = "",
-                    email = user.email ?: "",
-                    role = "student"
-                )
-            )
+            // 🔥 CHECK if profile exists FIRST
+            val hasProfile = hasUserProfile(user.uid)
 
+            // Optional Firebase features
             firebaseRepo.saveCurrentUserTokenToFirestore()
             firebaseRepo.subscribeToGlobalAnnouncements()
+
+            hasProfile // ✅ return result
         }
+    }
+
+    // ✅ OUTSIDE function (correct placement)
+    suspend fun hasUserProfile(uid: String): Boolean {
+        val doc = firebaseRepo.getUserProfile(uid)
+        return doc.getOrNull() != null
     }
 
     fun getCurrentUser() = auth.currentUser
 
     fun signOut() {
         auth.signOut()
-        GoogleSignIn.getClient(context, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut()
+        getGoogleSignInClient().signOut()
     }
 }
