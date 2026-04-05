@@ -12,7 +12,6 @@
           "package_name": "com.example.hanaparal"
         }
       },
-      "oauth_client": [],
       "api_key": [
         {
           "current_key": "AIzaSyAmn173cy6nMoFvdF94_iAOxwXm90_kJPc"
@@ -20,7 +19,6 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
         }
       }
     }

@@ -16,7 +16,6 @@ fun AppNav(
     homeScreen: @Composable () -> Unit,
     superuserScreen: @Composable () -> Unit
 ) {
-    NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) { homeScreen() }
         composable(Routes.SUPERUSER) { superuserScreen() }
     }
